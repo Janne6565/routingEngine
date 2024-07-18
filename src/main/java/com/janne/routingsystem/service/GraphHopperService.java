@@ -4,6 +4,7 @@ import com.janne.routingsystem.model.Coordinate;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.model.outgoing.RouteRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,11 +22,12 @@ public class GraphHopperService {
      * @param coordinateB Destination Coordinate
      * @return RouteResponse object
      */
+    @Cacheable(value = "routes", key = "#coordinateA.toString() + '-' + #coordinateB.toString()")
     public RouteResponse calculateRoute(Coordinate coordinateA, Coordinate coordinateB) {
         RouteRequest routeRequest = RouteRequest.builder()
                 .points(new Coordinate[]{coordinateA, coordinateB})
                 .build();
-
+        System.out.println(routeRequest.buildJsonString());
         Mono<RouteResponse> routeResponseMono = webClient.post()
                 .uri("/route?key=")
                 .contentType(MediaType.APPLICATION_JSON)

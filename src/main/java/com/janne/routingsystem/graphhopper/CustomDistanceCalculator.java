@@ -29,7 +29,7 @@ public class CustomDistanceCalculator extends AbstractForwardVehicleRoutingTrans
         Coordinate from = Coordinate.fromLocation(locationFrom);
         Coordinate to = Coordinate.fromLocation(locationTo);
         RouteResponse routeResponse = graphHopperService.calculateRoute(from, to);
-        return routeResponse.getPaths().getFirst().getTime();
+        return (double) routeResponse.getPaths().getFirst().getTime() / 1000 / 60;
     }
 
     @Override

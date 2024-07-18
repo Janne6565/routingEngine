@@ -22,8 +22,8 @@ public class Coordinate {
 
     public static Coordinate fromLocation(Location location) {
         return Coordinate.builder()
-                .lng(location.getCoordinate().getX())
-                .lat(location.getCoordinate().getY())
+                .lng(location.getCoordinate().getY())
+                .lat(location.getCoordinate().getX())
                 .build();
     }
 

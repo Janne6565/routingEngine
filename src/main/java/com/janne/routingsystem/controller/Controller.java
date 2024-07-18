@@ -1,16 +1,21 @@
 package com.janne.routingsystem.controller;
 
+import com.graphhopper.jsprit.core.problem.Skills;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
+import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.janne.routingsystem.model.Coordinate;
+import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.service.GraphHopperService;
 import com.janne.routingsystem.service.RoutingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Collection;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,11 +30,10 @@ public class Controller {
         return ResponseEntity.ok(result);
     }
 
-    @PostMapping("/vehicleRoutingProblemSolver")
+    @GetMapping("/fleetInstructions")
     public ResponseEntity<VehicleRoutingProblemSolution> vehicleRoutingProblemSolver(
-            @RequestParam Coordinate[] startPositions,
-            @RequestParam Coordinate[] jobPositions
+            @RequestBody FleetInstructionsRequest fleetInstructionsRequest
     ) {
-        return ResponseEntity.ok(routingService.calculateBestSolution(startPositions, jobPositions));
+        return ResponseEntity.ok(routingService.calculateBestSolution(fleetInstructionsRequest.getStartPositions(), fleetInstructionsRequest.getJobPositions()));
     }
 }

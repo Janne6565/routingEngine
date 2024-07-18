@@ -7,6 +7,7 @@ import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolutio
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
+import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.janne.routingsystem.graphhopper.CustomDistanceCalculator;
 import com.janne.routingsystem.model.Coordinate;
@@ -25,9 +26,8 @@ public class RoutingService {
         VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance("defaultCarType");
         VehicleType defaultCarType = vehicleTypeBuilder.build();
 
-
         VehicleRoutingProblem.Builder vehicleRoutingProblem = VehicleRoutingProblem.Builder.newInstance();
-
+        vehicleRoutingProblem.setRoutingCost(customDistanceCalculator);
 
         int vehicleCounter = 0;
         for (Coordinate startPosition : startPositions) {
@@ -42,6 +42,7 @@ public class RoutingService {
         for (Coordinate jobPosition : jobPositions) {
             vehicleRoutingProblem.addJob(com.graphhopper.jsprit.core.problem.job.Service.Builder.newInstance("job" + jobCounter)
                     .setLocation(jobPosition.toLocation())
+                    .setServiceTime(0)
                     .build());
             jobCounter += 1;
         }
@@ -49,9 +50,9 @@ public class RoutingService {
         VehicleRoutingProblem problem = vehicleRoutingProblem.build();
         VehicleRoutingAlgorithm algorithm = Jsprit.createAlgorithm(problem);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
+        VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
 
-        VehicleRoutingProblemSolution vehicleRoutingProblemSolution = Solutions.bestOf(solutions);
-
-        return vehicleRoutingProblemSolution;
+        SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
+        return bestSolution;
     }
 }
