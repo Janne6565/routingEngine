@@ -1,8 +1,6 @@
 package com.janne.routingsystem.controller;
 
-import com.graphhopper.jsprit.core.problem.Skills;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
-import com.graphhopper.jsprit.core.problem.solution.route.VehicleRoute;
 import com.janne.routingsystem.model.Coordinate;
 import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
 import com.janne.routingsystem.model.incoming.RouteResponse;
@@ -14,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Collection;
 
 @RestController
 @RequiredArgsConstructor

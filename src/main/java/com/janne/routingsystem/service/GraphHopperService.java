@@ -18,6 +18,7 @@ public class GraphHopperService {
 
     /**
      * Calculates the optimal route to travel from coordinateA to coordinateB
+     *
      * @param coordinateA Starting Coordinate
      * @param coordinateB Destination Coordinate
      * @return RouteResponse object
