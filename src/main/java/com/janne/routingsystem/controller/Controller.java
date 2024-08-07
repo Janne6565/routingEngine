@@ -8,10 +8,7 @@ import com.janne.routingsystem.service.GraphHopperService;
 import com.janne.routingsystem.service.RoutingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +23,7 @@ public class Controller {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/fleetInstructions")
+    @PostMapping("/fleetInstructions")
     public ResponseEntity<VehicleRoutingProblemSolution> vehicleRoutingProblemSolver(
             @RequestBody FleetInstructionsRequest fleetInstructionsRequest
     ) {

@@ -12,6 +12,7 @@ import com.graphhopper.jsprit.core.util.Solutions;
 import com.janne.routingsystem.graphhopper.CustomDistanceCalculator;
 import com.janne.routingsystem.model.Coordinate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -22,6 +23,7 @@ public class RoutingService {
 
     private final CustomDistanceCalculator customDistanceCalculator;
 
+    @Cacheable(value = "solutions", key = "#startPositions.toString() + '-' + #jobPositions.toString()")
     public VehicleRoutingProblemSolution calculateBestSolution(Coordinate[] startPositions, Coordinate[] jobPositions) {
         VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance("defaultCarType");
         VehicleType defaultCarType = vehicleTypeBuilder.build();
@@ -42,7 +44,7 @@ public class RoutingService {
         for (Coordinate jobPosition : jobPositions) {
             vehicleRoutingProblem.addJob(com.graphhopper.jsprit.core.problem.job.Service.Builder.newInstance("job" + jobCounter)
                     .setLocation(jobPosition.toLocation())
-                    .setServiceTime(0)
+                    .setServiceTime(10)
                     .build());
             jobCounter += 1;
         }

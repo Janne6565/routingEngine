@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
 public class CacheConfig {
     @Bean
     public ConcurrentMapCacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("routes");
+        return new ConcurrentMapCacheManager("routes", "solutions");
     }
 }

@@ -16,8 +16,8 @@ public class Coordinate {
 
     public Coordinate(String value) {
         String[] params = value.split(",");
-        lat = Double.parseDouble(params[1]);
         lng = Double.parseDouble(params[0]);
+        lat = Double.parseDouble(params[1]);
     }
 
     public static Coordinate fromLocation(Location location) {
