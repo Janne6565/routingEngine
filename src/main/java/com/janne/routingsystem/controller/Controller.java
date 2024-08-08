@@ -27,6 +27,6 @@ public class Controller {
     public ResponseEntity<VehicleRoutingProblemSolution> vehicleRoutingProblemSolver(
             @RequestBody FleetInstructionsRequest fleetInstructionsRequest
     ) {
-        return ResponseEntity.ok(routingService.calculateBestSolution(fleetInstructionsRequest.getStartPositions(), fleetInstructionsRequest.getJobPositions()));
+        return ResponseEntity.ok(routingService.calculateBestSolution(fleetInstructionsRequest.getVehicles(), fleetInstructionsRequest.getJobs()));
     }
 }

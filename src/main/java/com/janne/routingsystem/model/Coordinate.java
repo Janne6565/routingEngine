@@ -1,6 +1,7 @@
 package com.janne.routingsystem.model;
 
 import com.graphhopper.jsprit.core.problem.Location;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,13 +12,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Coordinate {
+    @NotNull
     private double lat;
+    @NotNull
     private double lng;
 
     public Coordinate(String value) {
         String[] params = value.split(",");
-        lng = Double.parseDouble(params[0]);
-        lat = Double.parseDouble(params[1]);
+        lat = Double.parseDouble(params[0]);
+        lng = Double.parseDouble(params[1]);
     }
 
     public static Coordinate fromLocation(Location location) {
@@ -28,7 +31,7 @@ public class Coordinate {
     }
 
     public String buildToJson() {
-        return "[" + lat + "," + lng + "]";
+        return "[" + lng + "," + lat + "]";
     }
 
     public Location toLocation() {

@@ -33,7 +33,6 @@ public class GraphHopperService {
             RouteRequest routeRequest = RouteRequest.builder()
                     .points(new Coordinate[]{coordinateA, coordinateB})
                     .build();
-            System.out.println(routeRequest.buildJsonString());
             Mono<RouteResponse> routeResponseMono = webClient.post()
                     .uri("/route?key=")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -45,6 +44,7 @@ public class GraphHopperService {
             return routeResponseMono.block();
         } catch (Exception e) {
             log.error("Error while calculating route for {} to {}", coordinateA.buildToJson(), coordinateB.buildToJson());
+            log.error("Error message: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
