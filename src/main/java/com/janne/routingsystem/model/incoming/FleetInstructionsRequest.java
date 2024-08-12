@@ -1,6 +1,5 @@
 package com.janne.routingsystem.model.incoming;
 
-import com.janne.routingsystem.model.Coordinate;
 import com.janne.routingsystem.model.dto.JobDto;
 import com.janne.routingsystem.model.dto.VehicleDto;
 import lombok.AllArgsConstructor;

@@ -1,6 +1,6 @@
 package com.janne.routingsystem.model.outgoing;
 
-import com.janne.routingsystem.model.Coordinate;
+import com.janne.routingsystem.model.CoordinateDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,11 +13,11 @@ import java.util.Arrays;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RouteRequest {
-    private Coordinate[] points;
+    private CoordinateDto[] points;
     @Builder.Default
     private String profile = "car";
 
     public String buildJsonString() {
-        return "{\"points\": [" + String.join(",", Arrays.stream(this.points).map(Coordinate::buildToJson).toList()) + "]," + "\"profile\": \"" + profile + "\"}";
+        return "{\"points\": [" + String.join(",", Arrays.stream(this.points).map(CoordinateDto::buildToJson).toList()) + "]," + "\"profile\": \"" + profile + "\"}";
     }
 }

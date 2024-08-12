@@ -11,20 +11,20 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Coordinate {
+public class CoordinateDto {
     @NotNull
     private double lat;
     @NotNull
     private double lng;
 
-    public Coordinate(String value) {
+    public CoordinateDto(String value) {
         String[] params = value.split(",");
         lat = Double.parseDouble(params[0]);
         lng = Double.parseDouble(params[1]);
     }
 
-    public static Coordinate fromLocation(Location location) {
-        return Coordinate.builder()
+    public static CoordinateDto fromLocation(Location location) {
+        return CoordinateDto.builder()
                 .lng(location.getCoordinate().getY())
                 .lat(location.getCoordinate().getX())
                 .build();

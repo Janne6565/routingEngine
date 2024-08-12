@@ -1,6 +1,6 @@
 package com.janne.routingsystem.service;
 
-import com.janne.routingsystem.model.Coordinate;
+import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.model.outgoing.RouteRequest;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -23,15 +22,16 @@ public class GraphHopperService {
     /**
      * Calculates the optimal route to travel from coordinateA to coordinateB
      *
-     * @param coordinateA Starting Coordinate
-     * @param coordinateB Destination Coordinate
+     * @param coordinateDtoA Starting Coordinate
+     * @param coordinateDtoB Destination Coordinate
      * @return RouteResponse object
      */
-    @Cacheable(value = "routes", key = "#coordinateA.toString() + '-' + #coordinateB.toString()")
-    public RouteResponse calculateRoute(Coordinate coordinateA, Coordinate coordinateB) {
+    @Cacheable(value = "routes", key = "#coordinateDtoA.toString() + '-' + #coordinateDtoB.toString()")
+    public RouteResponse calculateRoute(CoordinateDto coordinateDtoA, CoordinateDto coordinateDtoB) {
+        System.out.println("Calculating route from " + coordinateDtoA.buildToJson() + " to " + coordinateDtoB.buildToJson());
         try {
             RouteRequest routeRequest = RouteRequest.builder()
-                    .points(new Coordinate[]{coordinateA, coordinateB})
+                    .points(new CoordinateDto[]{coordinateDtoA, coordinateDtoB})
                     .build();
             Mono<RouteResponse> routeResponseMono = webClient.post()
                     .uri("/route?key=")
@@ -43,7 +43,7 @@ public class GraphHopperService {
 
             return routeResponseMono.block();
         } catch (Exception e) {
-            log.error("Error while calculating route for {} to {}", coordinateA.buildToJson(), coordinateB.buildToJson());
+            log.error("Error while calculating route for {} to {}", coordinateDtoA.buildToJson(), coordinateDtoB.buildToJson());
             log.error("Error message: {}", e.getMessage());
             throw new RuntimeException(e);
         }

@@ -1,7 +1,7 @@
 package com.janne.routingsystem.controller;
 
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
-import com.janne.routingsystem.model.Coordinate;
+import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.service.GraphHopperService;
@@ -18,7 +18,7 @@ public class Controller {
     private final RoutingService routingService;
 
     @GetMapping("/route")
-    public ResponseEntity<RouteResponse> route(@RequestParam Coordinate from, @RequestParam Coordinate to) {
+    public ResponseEntity<RouteResponse> route(@RequestParam CoordinateDto from, @RequestParam CoordinateDto to) {
         RouteResponse result = graphHopperService.calculateRoute(from, to);
         return ResponseEntity.ok(result);
     }

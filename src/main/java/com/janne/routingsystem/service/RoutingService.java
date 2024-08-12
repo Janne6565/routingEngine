@@ -11,7 +11,7 @@ import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.janne.routingsystem.graphhopper.CustomDistanceCalculator;
-import com.janne.routingsystem.model.Coordinate;
+import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.dto.JobDto;
 import com.janne.routingsystem.model.dto.VehicleDto;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ public class RoutingService {
         vehicleRoutingProblem.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
 
         for (VehicleDto vehicleDto : vehicleDtos) {
-            Coordinate startPosition = vehicleDto.getPosition();
+            CoordinateDto startPosition = vehicleDto.getPosition();
             vehicleRoutingProblem.addVehicle(VehicleImpl.Builder.newInstance(vehicleDto.getId())
                     .setStartLocation(startPosition.toLocation())
                     .setEarliestStart(vehicleDto.getEarliestTime())
@@ -46,7 +46,7 @@ public class RoutingService {
         }
 
         for (JobDto jobDto : jobPositions) {
-            Coordinate jobPosition = jobDto.getPosition();
+            CoordinateDto jobPosition = jobDto.getPosition();
             vehicleRoutingProblem.addJob(com.graphhopper.jsprit.core.problem.job.Service.Builder.newInstance(jobDto.getId())
                     .setLocation(jobPosition.toLocation())
                     .setName(jobDto.getId())
