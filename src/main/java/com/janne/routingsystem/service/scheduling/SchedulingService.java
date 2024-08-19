@@ -52,6 +52,7 @@ public class SchedulingService {
         }
 
         ScheduledTask taskToRun = tasks.get(0);
+        tasks.remove(0);
         FleetInstructionsRequest request = taskToRun.getRequest();
         logger.info("Starting job with uuid: {}", taskToRun.getId());
         VehicleRoutingProblemSolution solution = routingService.calculateBestSolution(request.getVehicles(), request.getJobs(), Arrays.toString(request.getVehicles()) + " " + Arrays.toString(request.getJobs()));
