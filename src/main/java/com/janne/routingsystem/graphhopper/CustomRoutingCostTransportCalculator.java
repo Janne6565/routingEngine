@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CustomDistanceCalculator extends AbstractForwardVehicleRoutingTransportCosts {
+public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicleRoutingTransportCosts {
 
     private final GraphHopperService graphHopperService;
 
@@ -37,6 +37,6 @@ public class CustomDistanceCalculator extends AbstractForwardVehicleRoutingTrans
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
         RouteResponse routeResponse = graphHopperService.calculateRoute(from, to);
-        return routeResponse.getPaths().getFirst().getWeight();
+        return routeResponse.getPaths().getFirst().getTime();
     }
 }

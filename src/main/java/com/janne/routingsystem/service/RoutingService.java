@@ -8,9 +8,8 @@ import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleImpl;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleType;
 import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
-import com.graphhopper.jsprit.core.reporting.SolutionPrinter;
 import com.graphhopper.jsprit.core.util.Solutions;
-import com.janne.routingsystem.graphhopper.CustomDistanceCalculator;
+import com.janne.routingsystem.graphhopper.CustomRoutingCostTransportCalculator;
 import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.dto.JobDto;
 import com.janne.routingsystem.model.dto.VehicleDto;
@@ -24,15 +23,15 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class RoutingService {
 
-    private final CustomDistanceCalculator customDistanceCalculator;
+    private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
 
-    @Cacheable(value = "solutions", key = "#vehicleDtos.toString() + '-' + #jobPositions.toString()")
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions) {
+    @Cacheable(value = "solutions", key = "#key")
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key) {
         VehicleTypeImpl.Builder vehicleTypeBuilder = VehicleTypeImpl.Builder.newInstance("defaultCarType");
         VehicleType defaultCarType = vehicleTypeBuilder.build();
 
         VehicleRoutingProblem.Builder vehicleRoutingProblem = VehicleRoutingProblem.Builder.newInstance();
-        vehicleRoutingProblem.setRoutingCost(customDistanceCalculator);
+        vehicleRoutingProblem.setRoutingCost(customRoutingCostTransportCalculator);
         vehicleRoutingProblem.setFleetSize(VehicleRoutingProblem.FleetSize.FINITE);
 
         for (VehicleDto vehicleDto : vehicleDtos) {
@@ -57,10 +56,16 @@ public class RoutingService {
 
         VehicleRoutingProblem problem = vehicleRoutingProblem.build();
         VehicleRoutingAlgorithm algorithm = Jsprit.createAlgorithm(problem);
+        algorithm.setMaxIterations(35);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
-        VehicleRoutingProblemSolution bestSolution = Solutions.bestOf(solutions);
-
-        SolutionPrinter.print(problem, bestSolution, SolutionPrinter.Print.VERBOSE);
-        return bestSolution;
+        double maxCost = 0;
+        VehicleRoutingProblemSolution worstSolution = null;
+        for (VehicleRoutingProblemSolution solution : solutions) {
+            if (solution.getCost() > maxCost) {
+               worstSolution = solution;
+               maxCost = solution.getCost();
+            }
+        }
+        return Solutions.bestOf(solutions);
     }
 }

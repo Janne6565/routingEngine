@@ -12,12 +12,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class GraphHopperService {
 
     private static final Logger log = LoggerFactory.getLogger(GraphHopperService.class);
     private final WebClient webClient;
+    private int counter = 0;
+    private Map<CoordinateDto, Integer> countsUsedAsNode = new HashMap<>();
 
     /**
      * Calculates the optimal route to travel from coordinateA to coordinateB
@@ -28,7 +33,15 @@ public class GraphHopperService {
      */
     @Cacheable(value = "routes", key = "#coordinateDtoA.toString() + '-' + #coordinateDtoB.toString()")
     public RouteResponse calculateRoute(CoordinateDto coordinateDtoA, CoordinateDto coordinateDtoB) {
-        System.out.println("Calculating route from " + coordinateDtoA.buildToJson() + " to " + coordinateDtoB.buildToJson());
+        countsUsedAsNode.put(coordinateDtoA, countsUsedAsNode.getOrDefault(coordinateDtoA, 0) + 1);
+        if (countsUsedAsNode.get(coordinateDtoA) % 100 == 0) {
+            log.info("Visited node {} {} times", coordinateDtoA.buildToJson(), countsUsedAsNode.get(coordinateDtoA));
+        }
+        counter ++;
+        if (counter % 10000 == 0) {
+            log.info("Counter {}", counter);
+        }
+        // log.info("Calculating route from {} to {}", coordinateDtoA.buildToJson(), coordinateDtoB.buildToJson());
         try {
             RouteRequest routeRequest = RouteRequest.builder()
                     .points(new CoordinateDto[]{coordinateDtoA, coordinateDtoB})
