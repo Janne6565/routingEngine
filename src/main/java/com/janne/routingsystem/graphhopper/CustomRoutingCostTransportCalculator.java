@@ -8,6 +8,7 @@ import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.service.GraphHopperService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,6 +18,7 @@ public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicle
     private final GraphHopperService graphHopperService;
 
     @Override
+    @Cacheable(value = "distances", key = "#locationFrom.toString() + #locationTo.toString()")
     public double getDistance(Location locationFrom, Location locationTo, double v, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
@@ -25,6 +27,7 @@ public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicle
     }
 
     @Override
+    @Cacheable(value = "transportTimes", key = "#locationFrom.toString() + #locationTo.toString()")
     public double getTransportTime(Location locationFrom, Location locationTo, double v, Driver driver, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
@@ -33,6 +36,7 @@ public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicle
     }
 
     @Override
+    @Cacheable(value = "transportCosts", key = "#locationFrom.toString() + #locationTo.toString()")
     public double getTransportCost(Location locationFrom, Location locationTo, double v, Driver driver, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);

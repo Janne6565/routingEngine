@@ -1,14 +1,15 @@
 package com.janne.routingsystem.model;
 
 import com.graphhopper.jsprit.core.problem.Location;
+import com.graphhopper.jsprit.core.util.Coordinate;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
 @Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class CoordinateDto {
@@ -30,11 +31,16 @@ public class CoordinateDto {
                 .build();
     }
 
+    public Location toLocation() {
+        return Location.Builder.newInstance()
+                .setCoordinate(new Coordinate(lat, lng))
+                .setId("[" + lat + "," + lng + "]")
+                .build();
+    }
+
     public String buildToJson() {
         return "[" + lng + "," + lat + "]";
     }
 
-    public Location toLocation() {
-        return Location.newInstance(lat, lng);
-    }
+
 }

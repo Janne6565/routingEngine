@@ -2,6 +2,7 @@ package com.janne.routingsystem.controller;
 
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.janne.routingsystem.model.CoordinateDto;
+import com.janne.routingsystem.model.MemoryStats;
 import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
 import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.service.GraphHopperService;
@@ -36,10 +37,24 @@ public class Controller {
     }
 
     @GetMapping("/fleetInstructions/{uuid}")
-    public ResponseEntity<VehicleRoutingProblemSolution> getVehicleRoutingSolution(@PathParam("uuid") String uuid) {
+    public ResponseEntity<VehicleRoutingProblemSolution> getVehicleRoutingSolution(@PathVariable("uuid") String uuid) {
+        if (!schedulingService.doesTaskExist(uuid)) {
+            return ResponseEntity.notFound().build();
+        }
+
         if (!schedulingService.isFinished(uuid)) {
             return ResponseEntity.accepted().body(null);
         }
         return ResponseEntity.ok(schedulingService.getResult(uuid));
+    }
+
+    @GetMapping("memory-status")
+    public MemoryStats getMemoryStatistics() {
+        MemoryStats stats = new MemoryStats();
+        stats.setHeapSize(Runtime.getRuntime().totalMemory());
+        stats.setHeapMaxSize(Runtime.getRuntime().maxMemory());
+        stats.setHeapFreeSize(Runtime.getRuntime().freeMemory());
+        System.out.println(stats.toString());
+        return stats;
     }
 }

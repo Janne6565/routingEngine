@@ -1,6 +1,7 @@
 package com.janne.routingsystem.service.scheduling;
 
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
+import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
 import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
 import com.janne.routingsystem.service.RoutingService;
 import io.micrometer.common.lang.Nullable;
@@ -19,9 +20,12 @@ public class SchedulingService {
 
     private final RoutingService routingService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-
     private final ArrayList<ScheduledTask> tasks = new ArrayList<>();
     private final Map<String, VehicleRoutingProblemSolution> results = new HashMap<>();
+
+    public boolean doesTaskExist(String uuid) {
+        return results.containsKey(uuid);
+    }
 
     public String scheduleTask(FleetInstructionsRequest request) {
         String uuid = UUID.randomUUID().toString();
@@ -44,7 +48,7 @@ public class SchedulingService {
         return results.getOrDefault(uuid, null);
     }
 
-    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.MINUTES)
+    @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS)
     private void runTasks() {
         if (tasks.size() <= 0) {
             logger.info("No tasks to run");
@@ -56,6 +60,7 @@ public class SchedulingService {
         FleetInstructionsRequest request = taskToRun.getRequest();
         logger.info("Starting job with uuid: {}", taskToRun.getId());
         VehicleRoutingProblemSolution solution = routingService.calculateBestSolution(request.getVehicles(), request.getJobs(), Arrays.toString(request.getVehicles()) + " " + Arrays.toString(request.getJobs()));
+        System.out.println(solution);
         results.put(taskToRun.getId(), solution);
         logger.info("Finished job with uuid: {}", taskToRun.getId());
     }
