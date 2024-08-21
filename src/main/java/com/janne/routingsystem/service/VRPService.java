@@ -4,6 +4,7 @@ import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
+import com.graphhopper.jsprit.core.problem.job.Break;
 import com.graphhopper.jsprit.core.problem.job.Job;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
@@ -27,6 +28,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -83,37 +85,61 @@ public class VRPService {
         return Solutions.bestOf(solutions);
     }
 
-    private VehicleRoutingTransportCostsMatrix buildDistanceMatrixForProblem(Location[] locations, boolean makeFaster) {
-        VehicleRoutingTransportCostsMatrix.Builder builder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(makeFaster);
-        Set<Pair<String, String>> visited = new HashSet<>();
-        int done = 0;
+    private VehicleRoutingTransportCostsMatrix buildDistanceMatrixForProblem(Location[] locations, boolean isSymmetric) {
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        VehicleRoutingTransportCostsMatrix.Builder builder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(isSymmetric);
+        Set<Pair<String, String>> visited = ConcurrentHashMap.newKeySet();  // Thread-safe set
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        int counterStarted = 0;
+
         for (int outerIndex = 0; outerIndex < locations.length; outerIndex++) {
             Location location1 = locations[outerIndex];
-            for (int innerIndex = makeFaster ? outerIndex + 1 : 0; innerIndex < locations.length; innerIndex++) {
+
+            for (int innerIndex = isSymmetric ? outerIndex + 1 : 0; innerIndex < locations.length; innerIndex++) {
                 if (outerIndex == innerIndex) {
                     continue;
                 }
 
                 Location location2 = locations[innerIndex];
-
                 Pair<String, String> currentRoute = new Pair<>(location1.toString(), location2.toString());
-                if (visited.contains(currentRoute) || (makeFaster && visited.contains(new Pair<>(location2.toString(), location1.toString())))) {
+
+                if (visited.contains(currentRoute) || (isSymmetric && visited.contains(new Pair<>(location2.toString(), location1.toString())))) {
                     continue;
                 }
+
                 visited.add(currentRoute);
 
-                RouteResponse route = routingService.calculateRoute(CoordinateDto.fromLocation(location1), CoordinateDto.fromLocation(location2));
-                RouteResponse.Path path = route.getPaths().getFirst();
-                builder.addTransportDistance(location1.getId(), location2.getId(), path.getDistance());
-                builder.addTransportTime(location1.getId(), location2.getId(), path.getTime() / 1000 / 60);
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    try {
+                        RouteResponse route = routingService.calculateRoute(CoordinateDto.fromLocation(location1), CoordinateDto.fromLocation(location2));
+                        RouteResponse.Path path = route.getPaths().getFirst();
+                        synchronized (builder) {
+                            builder.addTransportDistance(location1.getId(), location2.getId(), path.getDistance());
+                            builder.addTransportTime(location1.getId(), location2.getId(), (double) path.getTime() / 1000 / 60);
+                        }
+                    } catch (Exception e) {
+                        logger.error("Error processing route between {} and {}", location1.getId(), location2.getId(), e);
+                    }
+                }, executorService);
+
+                futures.add(future);
             }
-            done += 1;
-            logger.info("Progress: {}% ({}/{})", (((float) done) / locations.length) * 100, done, locations.length);
+            logger.info("Started {}/{} {}%", ++counterStarted, locations.length, counterStarted/locations.length * 100);
+        }
+
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        allOf.join();
+
+        executorService.shutdown();
+        try {
+            executorService.awaitTermination(5, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+            logger.error("ExecutorService interrupted during shutdown", e);
         }
 
         return builder.build();
     }
-
 
     private static Location getRandomLocation() {
         return Location.newInstance(Math.random() * 1000, Math.random() * 1000);

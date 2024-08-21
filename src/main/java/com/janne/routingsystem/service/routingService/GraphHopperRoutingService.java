@@ -19,6 +19,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GraphHopperRoutingService implements RoutingService {
 
+    private final boolean DEBUG = false;
+
     private static final Logger log = LoggerFactory.getLogger(GraphHopperRoutingService.class);
     private final WebClient webClient;
     private int counter = 0;
@@ -33,13 +35,15 @@ public class GraphHopperRoutingService implements RoutingService {
      */
     @Cacheable(value = "routes", key = "#coordinateDtoA.toString() + '-' + #coordinateDtoB.toString()")
     public RouteResponse calculateRoute(CoordinateDto coordinateDtoA, CoordinateDto coordinateDtoB) {
-        countsUsedAsNode.put(coordinateDtoA, countsUsedAsNode.getOrDefault(coordinateDtoA, 0) + 1);
-        if (countsUsedAsNode.get(coordinateDtoA) % 100 == 0) {
-            log.info("Visited node {} {} times", coordinateDtoA.buildToJson(), countsUsedAsNode.get(coordinateDtoA));
-        }
-        counter ++;
-        if (counter % 10000 == 0) {
-            log.info("Counter {}", counter);
+        if (DEBUG) {
+            countsUsedAsNode.put(coordinateDtoA, countsUsedAsNode.getOrDefault(coordinateDtoA, 0) + 1);
+            if (countsUsedAsNode.getOrDefault(coordinateDtoA, 0) % 100 == 0) {
+                log.info("Visited node {} {} times", coordinateDtoA.buildToJson(), countsUsedAsNode.get(coordinateDtoA));
+            }
+            counter++;
+            if (counter % 10000 == 0) {
+                log.info("Counter {}", counter);
+            }
         }
 
         try {
