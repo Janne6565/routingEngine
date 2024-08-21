@@ -6,7 +6,7 @@ import com.graphhopper.jsprit.core.problem.driver.Driver;
 import com.graphhopper.jsprit.core.problem.vehicle.Vehicle;
 import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.incoming.RouteResponse;
-import com.janne.routingsystem.service.GraphHopperService;
+import com.janne.routingsystem.service.routingService.RoutingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -15,14 +15,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicleRoutingTransportCosts {
 
-    private final GraphHopperService graphHopperService;
+    private final RoutingService routingService;
 
     @Override
     @Cacheable(value = "distances", key = "#locationFrom.toString() + #locationTo.toString()")
     public double getDistance(Location locationFrom, Location locationTo, double v, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
-        RouteResponse routeResponse = graphHopperService.calculateRoute(from, to);
+        RouteResponse routeResponse = routingService.calculateRoute(from, to);
         return routeResponse.getPaths().getFirst().getDistance();
     }
 
@@ -31,7 +31,7 @@ public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicle
     public double getTransportTime(Location locationFrom, Location locationTo, double v, Driver driver, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
-        RouteResponse routeResponse = graphHopperService.calculateRoute(from, to);
+        RouteResponse routeResponse = routingService.calculateRoute(from, to);
         return (double) routeResponse.getPaths().getFirst().getTime() / 1000 / 60;
     }
 
@@ -40,7 +40,7 @@ public class CustomRoutingCostTransportCalculator extends AbstractForwardVehicle
     public double getTransportCost(Location locationFrom, Location locationTo, double v, Driver driver, Vehicle vehicle) {
         CoordinateDto from = CoordinateDto.fromLocation(locationFrom);
         CoordinateDto to = CoordinateDto.fromLocation(locationTo);
-        RouteResponse routeResponse = graphHopperService.calculateRoute(from, to);
+        RouteResponse routeResponse = routingService.calculateRoute(from, to);
         return routeResponse.getPaths().getFirst().getTime();
     }
 }

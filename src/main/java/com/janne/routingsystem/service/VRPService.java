@@ -18,6 +18,7 @@ import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.dto.JobDto;
 import com.janne.routingsystem.model.dto.VehicleDto;
 import com.janne.routingsystem.model.incoming.RouteResponse;
+import com.janne.routingsystem.service.routingService.RoutingService;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
@@ -29,11 +30,11 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-public class RoutingService {
+public class VRPService {
 
-    private final GraphHopperService graphHopperService;
+    private final RoutingService routingService;
     private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
-    private static final Logger logger = LoggerFactory.getLogger(RoutingService.class);
+    private static final Logger logger = LoggerFactory.getLogger(VRPService.class);
 
     @Cacheable(value = "solutions", key = "#key")
     public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key) {
@@ -101,7 +102,7 @@ public class RoutingService {
                 }
                 visited.add(currentRoute);
 
-                RouteResponse route = graphHopperService.calculateRoute(CoordinateDto.fromLocation(location1), CoordinateDto.fromLocation(location2));
+                RouteResponse route = routingService.calculateRoute(CoordinateDto.fromLocation(location1), CoordinateDto.fromLocation(location2));
                 RouteResponse.Path path = route.getPaths().getFirst();
                 builder.addTransportDistance(location1.getId(), location2.getId(), path.getDistance());
                 builder.addTransportTime(location1.getId(), location2.getId(), path.getTime() / 1000 / 60);

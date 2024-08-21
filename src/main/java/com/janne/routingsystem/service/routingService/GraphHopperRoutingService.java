@@ -1,4 +1,4 @@
-package com.janne.routingsystem.service;
+package com.janne.routingsystem.service.routingService;
 
 import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.incoming.RouteResponse;
@@ -17,9 +17,9 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class GraphHopperService {
+public class GraphHopperRoutingService implements RoutingService {
 
-    private static final Logger log = LoggerFactory.getLogger(GraphHopperService.class);
+    private static final Logger log = LoggerFactory.getLogger(GraphHopperRoutingService.class);
     private final WebClient webClient;
     private int counter = 0;
     private Map<CoordinateDto, Integer> countsUsedAsNode = new HashMap<>();
@@ -41,7 +41,7 @@ public class GraphHopperService {
         if (counter % 10000 == 0) {
             log.info("Counter {}", counter);
         }
-        // log.info("Calculating route from {} to {}", coordinateDtoA.buildToJson(), coordinateDtoB.buildToJson());
+
         try {
             RouteRequest routeRequest = RouteRequest.builder()
                     .points(new CoordinateDto[]{coordinateDtoA, coordinateDtoB})

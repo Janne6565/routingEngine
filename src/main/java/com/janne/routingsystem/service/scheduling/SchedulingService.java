@@ -1,9 +1,8 @@
 package com.janne.routingsystem.service.scheduling;
 
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
-import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
 import com.janne.routingsystem.model.incoming.FleetInstructionsRequest;
-import com.janne.routingsystem.service.RoutingService;
+import com.janne.routingsystem.service.VRPService;
 import io.micrometer.common.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class SchedulingService {
 
-    private final RoutingService routingService;
+    private final VRPService VRPService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final ArrayList<ScheduledTask> tasks = new ArrayList<>();
     private final Map<String, VehicleRoutingProblemSolution> results = new HashMap<>();
@@ -50,8 +49,7 @@ public class SchedulingService {
 
     @Scheduled(fixedDelay = 1, timeUnit = TimeUnit.SECONDS)
     private void runTasks() {
-        if (tasks.size() <= 0) {
-            logger.info("No tasks to run");
+        if (tasks.size() == 0) {
             return;
         }
 
@@ -59,7 +57,7 @@ public class SchedulingService {
         tasks.remove(0);
         FleetInstructionsRequest request = taskToRun.getRequest();
         logger.info("Starting job with uuid: {}", taskToRun.getId());
-        VehicleRoutingProblemSolution solution = routingService.calculateBestSolution(request.getVehicles(), request.getJobs(), Arrays.toString(request.getVehicles()) + " " + Arrays.toString(request.getJobs()));
+        VehicleRoutingProblemSolution solution = VRPService.calculateBestSolution(request.getVehicles(), request.getJobs(), Arrays.toString(request.getVehicles()) + " " + Arrays.toString(request.getJobs()));
         System.out.println(solution);
         results.put(taskToRun.getId(), solution);
         logger.info("Finished job with uuid: {}", taskToRun.getId());
