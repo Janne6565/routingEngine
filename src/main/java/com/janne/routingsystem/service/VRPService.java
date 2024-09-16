@@ -24,10 +24,12 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 @Service
@@ -35,12 +37,10 @@ import java.util.concurrent.*;
 public class VRPService {
 
     private final RoutingService routingService;
-    private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
     private static final Logger logger = LoggerFactory.getLogger(VRPService.class);
 
-    @Cacheable(value = "solutions", key = "#key")
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key) {
-        VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").build();
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, int iterations) {
+        VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").setMaxVelocity(0.7).build();
         List<Location> locations = new ArrayList<>();
 
         List<Vehicle> vehicles = new ArrayList<>();
@@ -75,12 +75,13 @@ public class VRPService {
                 .addAllJobs(jobs)
                 .addAllVehicles(vehicles)
                 .setRoutingCost(transportCostsMatrix)
+                .setFleetSize(VehicleRoutingProblem.FleetSize.FINITE)
                 .build();
 
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(problem);
         algorithmBuilder.setProperty(Jsprit.Parameter.THREADS, "8");
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
-        algorithm.setMaxIterations(40);
+        algorithm.setMaxIterations(iterations);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
         return Solutions.bestOf(solutions);
     }
@@ -89,7 +90,7 @@ public class VRPService {
         ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
         VehicleRoutingTransportCostsMatrix.Builder builder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(isSymmetric);
-        Set<Pair<String, String>> visited = ConcurrentHashMap.newKeySet();  // Thread-safe set
+        Set<Pair<String, String>> visited = ConcurrentHashMap.newKeySet();
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         int counterStarted = 0;
 

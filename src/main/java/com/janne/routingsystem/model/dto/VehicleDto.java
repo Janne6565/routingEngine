@@ -15,8 +15,6 @@ public class VehicleDto {
     private String id;
     @NotNull
     private CoordinateDto position;
-    private double capacity;
     private double earliestTime;
     private double latestTime;
-    private double serviceTime;
 }

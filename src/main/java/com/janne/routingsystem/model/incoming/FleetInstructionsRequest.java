@@ -15,5 +15,6 @@ public class FleetInstructionsRequest {
 
     private VehicleDto[] vehicles;
     private JobDto[] jobs;
+    private int iterations = 40;
 
 }
