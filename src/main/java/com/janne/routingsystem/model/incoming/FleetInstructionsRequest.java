@@ -15,5 +15,5 @@ public class FleetInstructionsRequest {
 
     private VehicleDto[] vehicles;
     private JobDto[] jobs;
-
+    private String previousSolutionId;
 }

@@ -13,15 +13,8 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class RouteResponse {
-    private Hints hints;
     private Info info;
     private List<Path> paths;
-
-    @Data
-    public static class Hints {
-        private int visitedNodesSum;
-        private double visitedNodesAverage;
-    }
 
     @Data
     public static class Info {
@@ -65,4 +58,5 @@ public class RouteResponse {
             // Add fields here if necessary.
         }
     }
+
 }

@@ -36,10 +36,11 @@ public class VRPService {
 
     private final RoutingService routingService;
     private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
-    private static final Logger logger = LoggerFactory.getLogger(VRPService.class);
+    private final Logger logger = LoggerFactory.getLogger(VRPService.class);
+    private final Map<String, VehicleRoutingTransportCostsMatrix> cachedDistanceMatrices = new ConcurrentHashMap<>();
 
     @Cacheable(value = "solutions", key = "#key")
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key) {
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key, VehicleRoutingProblemSolution previousSolution, String previousSolutionKey) {
         VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").build();
         List<Location> locations = new ArrayList<>();
 
@@ -68,8 +69,8 @@ public class VRPService {
 
             locations.add(location);
         }
-
-        VehicleRoutingTransportCostsMatrix transportCostsMatrix = buildDistanceMatrixForProblem(locations.toArray(Location[]::new), false);
+        System.out.println(previousSolutionKey != null ? "Previous solution key: " + previousSolutionKey : "No previous solution key");
+        VehicleRoutingTransportCostsMatrix transportCostsMatrix = previousSolutionKey != null ? routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, previousSolutionKey) : routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, key);
 
         VehicleRoutingProblem problem = VehicleRoutingProblem.Builder.newInstance()
                 .addAllJobs(jobs)
@@ -80,66 +81,17 @@ public class VRPService {
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(problem);
         algorithmBuilder.setProperty(Jsprit.Parameter.THREADS, "8");
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
+
+        if (previousSolution != null) {
+            algorithm.addInitialSolution(previousSolution);
+        }
+
         algorithm.setMaxIterations(40);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
         return Solutions.bestOf(solutions);
     }
 
-    private VehicleRoutingTransportCostsMatrix buildDistanceMatrixForProblem(Location[] locations, boolean isSymmetric) {
-        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
-        VehicleRoutingTransportCostsMatrix.Builder builder = VehicleRoutingTransportCostsMatrix.Builder.newInstance(isSymmetric);
-        Set<Pair<String, String>> visited = ConcurrentHashMap.newKeySet();  // Thread-safe set
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-        int counterStarted = 0;
-
-        for (int outerIndex = 0; outerIndex < locations.length; outerIndex++) {
-            Location location1 = locations[outerIndex];
-
-            for (int innerIndex = isSymmetric ? outerIndex + 1 : 0; innerIndex < locations.length; innerIndex++) {
-                if (outerIndex == innerIndex) {
-                    continue;
-                }
-
-                Location location2 = locations[innerIndex];
-                Pair<String, String> currentRoute = new Pair<>(location1.toString(), location2.toString());
-
-                if (visited.contains(currentRoute) || (isSymmetric && visited.contains(new Pair<>(location2.toString(), location1.toString())))) {
-                    continue;
-                }
-
-                visited.add(currentRoute);
-
-                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                    try {
-                        RouteResponse route = routingService.calculateRoute(CoordinateDto.fromLocation(location1), CoordinateDto.fromLocation(location2));
-                        RouteResponse.Path path = route.getPaths().getFirst();
-                        synchronized (builder) {
-                            builder.addTransportDistance(location1.getId(), location2.getId(), path.getDistance());
-                            builder.addTransportTime(location1.getId(), location2.getId(), (double) path.getTime() / 1000 / 60);
-                        }
-                    } catch (Exception e) {
-                        logger.error("Error processing route between {} and {}", location1.getId(), location2.getId(), e);
-                    }
-                }, executorService);
-
-                futures.add(future);
-            }
-            logger.info("Started {}/{} {}%", ++counterStarted, locations.length, counterStarted/locations.length * 100);
-        }
-
-        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        allOf.join();
-
-        executorService.shutdown();
-        try {
-            executorService.awaitTermination(5, TimeUnit.MINUTES);
-        } catch (InterruptedException e) {
-            logger.error("ExecutorService interrupted during shutdown", e);
-        }
-
-        return builder.build();
-    }
 
     private static Location getRandomLocation() {
         return Location.newInstance(Math.random() * 1000, Math.random() * 1000);

@@ -51,7 +51,6 @@ public class Controller {
         stats.setHeapSize(Runtime.getRuntime().totalMemory());
         stats.setHeapMaxSize(Runtime.getRuntime().maxMemory());
         stats.setHeapFreeSize(Runtime.getRuntime().freeMemory());
-        System.out.println(stats.toString());
         return stats;
     }
 }
