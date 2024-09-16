@@ -28,6 +28,10 @@ public class SchedulingService {
 
     public String scheduleTask(FleetInstructionsRequest request) {
         String uuid = UUID.randomUUID().toString();
+        while (results.containsKey(uuid)) {
+            uuid = UUID.randomUUID().toString();
+        }
+
         ScheduledTask task = ScheduledTask.builder()
                 .id(uuid)
                 .request(request)
@@ -57,6 +61,7 @@ public class SchedulingService {
         FleetInstructionsRequest request = taskToRun.getRequest();
         logger.info("Starting job with uuid: {}", taskToRun.getId());
         VehicleRoutingProblemSolution solution = runRequest(request, taskToRun.getId());
+        VehicleRoutingProblemSolution solution = VRPService.calculateBestSolution(request.getVehicles(), request.getJobs(), request.getIterations());
         results.put(taskToRun.getId(), solution);
         logger.info("Finished job with uuid: {}", taskToRun.getId());
     }

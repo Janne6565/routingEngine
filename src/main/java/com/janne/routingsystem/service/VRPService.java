@@ -24,10 +24,12 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 @Service
@@ -37,8 +39,9 @@ public class VRPService {
     private final RoutingService routingService;
     private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
     private final Logger logger = LoggerFactory.getLogger(VRPService.class);
-    private final Map<String, VehicleRoutingTransportCostsMatrix> cachedDistanceMatrices = new ConcurrentHashMap<>();
 
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, int iterations) {
+        VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").setMaxVelocity(0.7).build();
     @Cacheable(value = "solutions", key = "#key")
     public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key, VehicleRoutingProblemSolution previousSolution, String previousSolutionKey) {
         VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").build();
@@ -69,13 +72,13 @@ public class VRPService {
 
             locations.add(location);
         }
-        System.out.println(previousSolutionKey != null ? "Previous solution key: " + previousSolutionKey : "No previous solution key");
         VehicleRoutingTransportCostsMatrix transportCostsMatrix = previousSolutionKey != null ? routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, previousSolutionKey) : routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, key);
 
         VehicleRoutingProblem problem = VehicleRoutingProblem.Builder.newInstance()
                 .addAllJobs(jobs)
                 .addAllVehicles(vehicles)
                 .setRoutingCost(transportCostsMatrix)
+                .setFleetSize(VehicleRoutingProblem.FleetSize.FINITE)
                 .build();
 
         Jsprit.Builder algorithmBuilder = Jsprit.Builder.newInstance(problem);
@@ -87,6 +90,7 @@ public class VRPService {
         }
 
         algorithm.setMaxIterations(40);
+        algorithm.setMaxIterations(iterations);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
         return Solutions.bestOf(solutions);
     }
