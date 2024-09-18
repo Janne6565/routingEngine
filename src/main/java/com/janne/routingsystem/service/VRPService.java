@@ -4,7 +4,6 @@ import com.graphhopper.jsprit.core.algorithm.VehicleRoutingAlgorithm;
 import com.graphhopper.jsprit.core.algorithm.box.Jsprit;
 import com.graphhopper.jsprit.core.problem.Location;
 import com.graphhopper.jsprit.core.problem.VehicleRoutingProblem;
-import com.graphhopper.jsprit.core.problem.job.Break;
 import com.graphhopper.jsprit.core.problem.job.Job;
 import com.graphhopper.jsprit.core.problem.solution.VehicleRoutingProblemSolution;
 import com.graphhopper.jsprit.core.problem.solution.route.activity.TimeWindow;
@@ -15,13 +14,10 @@ import com.graphhopper.jsprit.core.problem.vehicle.VehicleTypeImpl;
 import com.graphhopper.jsprit.core.util.Solutions;
 import com.graphhopper.jsprit.core.util.VehicleRoutingTransportCostsMatrix;
 import com.janne.routingsystem.graphhopper.CustomRoutingCostTransportCalculator;
-import com.janne.routingsystem.model.CoordinateDto;
 import com.janne.routingsystem.model.dto.JobDto;
 import com.janne.routingsystem.model.dto.VehicleDto;
-import com.janne.routingsystem.model.incoming.RouteResponse;
 import com.janne.routingsystem.service.routingService.RoutingService;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,8 +25,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,11 +34,8 @@ public class VRPService {
     private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
     private final Logger logger = LoggerFactory.getLogger(VRPService.class);
 
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, int iterations) {
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key, int iterations, String previousSolutionKey) {
         VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").setMaxVelocity(0.7).build();
-    @Cacheable(value = "solutions", key = "#key")
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key, VehicleRoutingProblemSolution previousSolution, String previousSolutionKey) {
-        VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").build();
         List<Location> locations = new ArrayList<>();
 
         List<Vehicle> vehicles = new ArrayList<>();
@@ -54,6 +45,7 @@ public class VRPService {
                     .setStartLocation(location)
                     .setEarliestStart(vehicleDto.getEarliestTime())
                     .setLatestArrival(vehicleDto.getLatestTime())
+                    .setReturnToDepot(true)
                     .setType(defaultCarType)
                     .build());
 
@@ -68,6 +60,7 @@ public class VRPService {
                     .setServiceTime(jobDto.getServiceTime())
                     .setTimeWindow(new TimeWindow(jobDto.getEarliestTime(), jobDto.getLatestTime()))
                     .setName(jobDto.getId())
+                    .setUserData(jobDto.getServiceTime())
                     .build());
 
             locations.add(location);
@@ -85,17 +78,11 @@ public class VRPService {
         algorithmBuilder.setProperty(Jsprit.Parameter.THREADS, "8");
         VehicleRoutingAlgorithm algorithm = algorithmBuilder.buildAlgorithm();
 
-        if (previousSolution != null) {
-            algorithm.addInitialSolution(previousSolution);
-        }
-
         algorithm.setMaxIterations(40);
         algorithm.setMaxIterations(iterations);
         Collection<VehicleRoutingProblemSolution> solutions = algorithm.searchSolutions();
         return Solutions.bestOf(solutions);
     }
-
-
 
     private static Location getRandomLocation() {
         return Location.newInstance(Math.random() * 1000, Math.random() * 1000);

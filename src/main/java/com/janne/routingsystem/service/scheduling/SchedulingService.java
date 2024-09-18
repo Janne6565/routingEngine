@@ -61,12 +61,11 @@ public class SchedulingService {
         FleetInstructionsRequest request = taskToRun.getRequest();
         logger.info("Starting job with uuid: {}", taskToRun.getId());
         VehicleRoutingProblemSolution solution = runRequest(request, taskToRun.getId());
-        VehicleRoutingProblemSolution solution = VRPService.calculateBestSolution(request.getVehicles(), request.getJobs(), request.getIterations());
         results.put(taskToRun.getId(), solution);
         logger.info("Finished job with uuid: {}", taskToRun.getId());
     }
 
     private VehicleRoutingProblemSolution runRequest(FleetInstructionsRequest request, String uuid) {
-        return VRPService.calculateBestSolution(request.getVehicles(), request.getJobs(), uuid, results.getOrDefault(request.getPreviousSolutionId(), null), request.getPreviousSolutionId());
+        return VRPService.calculateBestSolution(request.getVehicles(), request.getJobs(), uuid, request.getIterations(), request.getPreviousSolutionId());
     }
 }
