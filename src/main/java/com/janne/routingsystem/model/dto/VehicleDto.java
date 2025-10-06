@@ -17,4 +17,5 @@ public class VehicleDto {
     private CoordinateDto position;
     private double earliestTime;
     private double latestTime;
+    private String[] skills = new String[0];
 }

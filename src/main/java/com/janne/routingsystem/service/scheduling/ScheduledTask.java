@@ -10,4 +10,5 @@ public class ScheduledTask {
 
     private final FleetInstructionsRequest request;
     private final String id;
+    private final String routingMetricKey;
 }

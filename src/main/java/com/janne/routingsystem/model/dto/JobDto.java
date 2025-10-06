@@ -18,4 +18,5 @@ public class JobDto {
     private double serviceTime;
     private double earliestTime;
     private double latestTime;
+    private String[] requiredSkills = new String[0];
 }

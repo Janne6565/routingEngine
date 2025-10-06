@@ -21,12 +21,6 @@ public class StartupListener implements ApplicationListener<ContextRefreshedEven
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         logger.info("Trying to connect to local Graphhopper instance using url: {}", graphhopperApiPath);
-        if (serviceChecker.isServiceUp(graphhopperApiPath)) {
-            logger.info("Graphhopper Service is up and reachable under: {}", graphhopperApiPath);
-        } else {
-            logger.error("Graphhopper not reachable under: {}\nMake sure you have graphhopper running locally and correctly configured the RootUrl in the spring application-properties", graphhopperApiPath);
-            System.exit(1);
-        }
     }
 
     @Override

@@ -34,7 +34,8 @@ public class VRPService {
     private final CustomRoutingCostTransportCalculator customRoutingCostTransportCalculator;
     private final Logger logger = LoggerFactory.getLogger(VRPService.class);
 
-    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions, String key, int iterations, String previousSolutionKey) {
+    public VehicleRoutingProblemSolution calculateBestSolution(VehicleDto[] vehicleDtos, JobDto[] jobPositions,
+            String key, int iterations, String previousSolutionKey) {
         VehicleType defaultCarType = VehicleTypeImpl.Builder.newInstance("defaultCarType").setMaxVelocity(0.7).build();
         List<Location> locations = new ArrayList<>();
 
@@ -65,7 +66,9 @@ public class VRPService {
 
             locations.add(location);
         }
-        VehicleRoutingTransportCostsMatrix transportCostsMatrix = previousSolutionKey != null ? routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, previousSolutionKey) : routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, key);
+        VehicleRoutingTransportCostsMatrix transportCostsMatrix = previousSolutionKey != null
+                ? routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, previousSolutionKey)
+                : routingService.buildDistanceMatrix(locations.toArray(Location[]::new), false, key);
 
         VehicleRoutingProblem problem = VehicleRoutingProblem.Builder.newInstance()
                 .addAllJobs(jobs)

@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -33,9 +36,10 @@ public class SchedulingService {
         }
 
         ScheduledTask task = ScheduledTask.builder()
-                .id(uuid)
-                .request(request)
-                .build();
+            .id(uuid)
+            .request(request)
+            .build();
+
         tasks.add(task);
         results.put(uuid, null);
 

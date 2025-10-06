@@ -7,7 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Builder
 @Data
 @AllArgsConstructor
@@ -20,22 +22,22 @@ public class CoordinateDto {
 
     public CoordinateDto(String value) {
         String[] params = value.split(",");
-        lat = Double.parseDouble(params[0]);
-        lng = Double.parseDouble(params[1]);
+        lng = Double.parseDouble(params[0]);
+        lat = Double.parseDouble(params[1]);
     }
 
     public static CoordinateDto fromLocation(Location location) {
         return CoordinateDto.builder()
-                .lng(location.getCoordinate().getY())
-                .lat(location.getCoordinate().getX())
-                .build();
+            .lng(location.getCoordinate().getX())
+            .lat(location.getCoordinate().getY())
+            .build();
     }
 
     public Location toLocation() {
         return Location.Builder.newInstance()
-                .setCoordinate(new Coordinate(lat, lng))
-                .setId("[" + lat + "," + lng + "]")
-                .build();
+            .setCoordinate(new Coordinate(lng, lat))
+            .setId("[" + lng + "," + lat + "]")
+            .build();
     }
 
     public String buildToJson() {

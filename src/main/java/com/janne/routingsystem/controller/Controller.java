@@ -28,7 +28,7 @@ public class Controller {
 
     @PostMapping("/fleetInstructions")
     public ResponseEntity<String> vehicleRoutingProblemSolver(
-            @RequestBody FleetInstructionsRequest fleetInstructionsRequest
+        @RequestBody FleetInstructionsRequest fleetInstructionsRequest
     ) {
         return ResponseEntity.accepted().body(schedulingService.scheduleTask(fleetInstructionsRequest));
     }

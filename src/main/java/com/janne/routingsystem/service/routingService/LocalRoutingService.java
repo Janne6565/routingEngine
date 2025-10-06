@@ -22,13 +22,13 @@ import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
-public class GraphHopperRoutingService implements RoutingService {
+public class LocalRoutingService implements RoutingService {
 
     private final boolean DEBUG = false;
 
-    private static final Logger log = LoggerFactory.getLogger(GraphHopperRoutingService.class);
-    private final WebClient webClient;
-    private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(LocalRoutingService.class);
+    private static final double DEFAULT_SPEED_KMH = 50.0; // Annahme: 50 km/h Durchschnittsgeschwindigkeit
+
     private int counter = 0;
     private Map<CoordinateDto, Integer> countsUsedAsNode = new HashMap<>();
 
@@ -53,23 +53,27 @@ public class GraphHopperRoutingService implements RoutingService {
         }
 
         try {
-            RouteRequest routeRequest = RouteRequest.builder()
-                    .points(new CoordinateDto[]{coordinateDtoA, coordinateDtoB})
-                    .build();
-            Mono<String> routeResponseMono = webClient.post()
-                    .uri("/route?key=")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON)
-                    .bodyValue(routeRequest.buildJsonString())
-                    .retrieve()
-                    .bodyToMono(String.class);
+            double distanceMeters = computeEuclideanDistanceMeters(coordinateDtoA, coordinateDtoB);
+            long timeMs = computeTravelTimeMs(distanceMeters, DEFAULT_SPEED_KMH);
 
-            String routeResponse = routeResponseMono.block();
-            return objectMapper.readValue(routeResponse, RouteResponse.class);
+            RouteResponse.Path path = new RouteResponse.Path();
+            path.setDistance(distanceMeters);
+            path.setTime(timeMs);
+            path.setWeight(distanceMeters);
+
+            RouteResponse.Info info = new RouteResponse.Info();
+            info.setTook(0);
+
+            RouteResponse response = RouteResponse.builder()
+                    .info(info)
+                    .paths(Collections.singletonList(path))
+                    .build();
+
+            return response;
         } catch (Exception e) {
             log.error("Error while calculating route for {} to {}", coordinateDtoA.buildToJson(), coordinateDtoB.buildToJson());
             log.error("Error message: {}", e.getMessage());
-            throw new RuntimeException("Error while calculating route", e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -111,13 +115,10 @@ public class GraphHopperRoutingService implements RoutingService {
                         }
                     } catch (Exception e) {
                         log.error("Error processing route between {} and {}", location1.getId(), location2.getId(), e);
-                        builder.addTransportTime(location1.getId(), location2.getId(), (double) Integer.MAX_VALUE);
-                        builder.addTransportDistance(location1.getId(), location2.getId(), Integer.MAX_VALUE);
                     }
                 }, executorService);
 
                 futures.add(future);
-                counterStarted++;
             }
         }
 
@@ -133,4 +134,25 @@ public class GraphHopperRoutingService implements RoutingService {
         }
 
         return builder.build();
-    }}
+    }
+
+    // Hilfsfunktionen: euklidische Distanz (auf equirektangulärer Projektion) und Fahrzeit
+    // Dadurch bleiben die Einheiten kompatibel (Meter und Millisekunden)
+    private static double computeEuclideanDistanceMeters(CoordinateDto a, CoordinateDto b) {
+        // Projektionsfaktoren: ~ Meter pro Grad
+        double latAvg = Math.toRadians((a.getLat() + b.getLat()) / 2.0);
+        double metersPerDegLat = 111_320.0;
+        double metersPerDegLon = 111_320.0 * Math.cos(latAvg);
+
+        double dx = (b.getLng() - a.getLng()) * metersPerDegLon;
+        double dy = (b.getLat() - a.getLat()) * metersPerDegLat;
+
+        return Math.hypot(dx, dy);
+    }
+
+    private static long computeTravelTimeMs(double distanceMeters, double speedKmh) {
+        double speedMps = (speedKmh * 1000.0) / 3600.0;
+        double seconds = (speedMps > 0) ? (distanceMeters / speedMps) : 0.0;
+        return (long) Math.round(seconds * 1000.0);
+    }
+}
